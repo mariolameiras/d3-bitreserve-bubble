@@ -48,7 +48,9 @@
 	function drawBubbles(m) {
 
 		// generate data with calculated layout values
-		var nodes = bubble.nodes(processData(m))
+		 d3.xhr("http://localhost:8080/api/bitreserve","application/json", function(error, root) {
+
+		var nodes = bubble.nodes(processData(JSON.parse(root.response)))
 		.filter(function(d) {
 			return !d.children;
 			}); // filter out the outer bubble
@@ -105,23 +107,12 @@
 		.duration(duration + delay)
 		.style('opacity', 0)
 		.remove();
+		  });
 	}
 
 
 	/* Bitreserve */
 
-
-	function getData() {
-		var i = 0;
-
-
-		$.ajax({
-			url: "http://localhost:8080/api/bitreserve"
-		}).then(function(data) {
-	    console.log(data[0].currency);
-		drawBubbles(data);
-	});
-	}
 
 	function processDataCurrency(data) {
 		if (!data) return;
@@ -157,6 +148,6 @@
 		};
 	}
 
-	timerId = setInterval(getData, 2000);
+	timerId = setInterval(drawBubbles, 2000);
 
 })();
