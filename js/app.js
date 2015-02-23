@@ -61,7 +61,7 @@
 	function drawBubbles(m) {
 
 		// generate data with calculated layout values
-		d3.xhr("http://localhost:8080/api/bitreserve","application/json", function(error, root) {
+		d3.xhr("http://nodeproxy.eu-gb.mybluemix.net/?url=https://api.bitreserve.org/v0/reserve/statistics","application/json", function(error, root) {
 
 			var nodes = bubble.nodes(processData(JSON.parse(root.response)))
 			.filter(function(d) {
