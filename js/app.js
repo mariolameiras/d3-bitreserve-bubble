@@ -51,14 +51,14 @@
 
 
 
-	function drawBubbles(m) {
+function drawBubbles() {
 
 		// generate data with calculated layout values
 		d3.xhr("https://nodeproxy.eu-gb.mybluemix.net/?url=https://api.bitreserve.org/v0/reserve/statistics","application/json", function(error, root) {
 
 			var nodes = bubble.nodes(processData(JSON.parse(root.response)))
 			.filter(function(d) {
-				return !d.children;
+				return d.name !== undefined;
 			}); // filter out the outer bubble
 
 		// assign new data to existing DOM 
@@ -66,6 +66,15 @@
 		.data(nodes, function(d) {
 			return d.name;
 		});
+
+		vis = svg.selectAll("circle")
+		.data(nodes)
+
+		// enter data -> remove, so non-exist selections for upcoming data won't stay -> enter new data -> ...
+
+		// To chain transitions, 
+		// create the transition on the updating elements before the entering elements 
+		// because enter.append merges entering elements into the update selection
 
 		var duration = 1000;
 		var delay = 0;
@@ -107,6 +116,8 @@
 		.duration(duration + delay)
 		.style('opacity', 0)
 		.remove();
+
+
 	});
 }
 
