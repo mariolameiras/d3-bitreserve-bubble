@@ -10,17 +10,10 @@
 
 	picker.addEventListener('change', function(e) {
 		dtype = picker.options[picker.selectedIndex].value;
-		if(dtype === "assets")
-		{
-			clearInterval(timerId);
-			drawNestedBubbles();
-			timerId = setInterval(drawNestedBubbles, 10000);
-		}
-		else{
-			clearInterval(timerId);
-			drawBubbles();
-			timerId = setInterval(drawBubbles, 10000);	
-		}
+		clearInterval(timerId);
+		drawBubbles();
+		timerId = setInterval(drawBubbles, 10000);
+
 	}, false);
 
 	var isRunning = true;
@@ -118,77 +111,6 @@
 }
 
 
-function drawNestedBubbles(m) {
-
-		// generate data with calculated layout values
-		d3.xhr("http://nodeproxy.eu-gb.mybluemix.net/?url=https://api.bitreserve.org/v0/reserve/statistics","application/json", function(error, root) {
-
-			var nodes = bubble.nodes(processData(JSON.parse(root.response)))
-			.filter(function(d) {
-				return d.name !== undefined;
-			}); // filter out the outer bubble
-
-		// assign new data to existing DOM 
-		var vis = svg.selectAll('circle')
-		.data(nodes, function(d) {
-			return d.name;
-		});
-
-		vis = svg.selectAll("circle")
-		.data(nodes)
-
-		// enter data -> remove, so non-exist selections for upcoming data won't stay -> enter new data -> ...
-
-		// To chain transitions, 
-		// create the transition on the updating elements before the entering elements 
-		// because enter.append merges entering elements into the update selection
-
-		var duration = 1000;
-		var delay = 0;
-
-		// update - this is created before enter.append. it only applies to updating nodes.
-		vis.transition()
-		.duration(duration)
-		.delay(function(d, i) {
-			delay = i * 7;
-			return delay;
-		})
-		.attr('transform', function(d) {
-			return 'translate(' + d.x + ',' + d.y + ')';
-		})
-		.attr('r', function(d) {
-			return d.r;
-		})
-			.style('opacity', 0.8); // force to 1, so they don't get stuck below 1 at enter()
-
-		// enter - only applies to incoming elements (once emptying data)	
-		vis.enter().append('circle')
-		.attr('transform', function(d) {
-			return 'translate(' + d.x + ',' + d.y + ')';
-		})
-		.attr('r', function(d) {
-			return d.r;
-		})
-		.attr('class', function(d) {
-			return d.className;
-		})
-		.style('opacity', 0)
-		.transition()
-		.duration(duration * 1.2)
-		.style('opacity', 0.8);
-
-		// exit
-		vis.exit()
-		.transition()
-		.duration(duration + delay)
-		.style('opacity', 0)
-		.remove();
-
-
-	});
-}
-
-
 /* Bitreserve */
 
 
@@ -200,28 +122,30 @@ function processData(data) {
 	console.log(dtype);
 	for (var prop in data) {
 		var nested = [];
-		for(var n in data[prop].values)
+		if(dtype === "assets")
 		{
+			for(var n in data[prop].values)
+			{
 
-			nested.push({
-				name: data[prop].values[n].currency,
-				className: data[prop].values[n].currency,
-				size: data[prop].values[n].assets,
+				nested.push({
+					name: data[prop].values[n].currency,
+					className: data[prop].values[n].currency,
+					size: data[prop].values[n].assets,
+				});
+			}}
+			newDataSet.push({
+				name: data[prop].currency,
+				className: data[prop].currency,
+				size: data[prop].totals[dtype],
+				children:nested,
 			});
 		}
-		newDataSet.push({
-			name: data[prop].currency,
-			className: data[prop].currency,
-			size: data[prop].totals[dtype],
-			children:nested,
-		});
+		return {
+			children: newDataSet
+		};
 	}
-	return {
-		children: newDataSet
-	};
-}
 
-drawBubbles();
-timerId = setInterval(drawBubbles, 10000);
+	drawBubbles();
+	timerId = setInterval(drawBubbles, 10000);
 
 })();
